@@ -1,0 +1,9 @@
+*.vcd
+*.log
+*.wlf
+*.fsdb
+*.svf
+*.vvp
+.vscode/
+*.out
+*.o
