@@ -1,0 +1,22 @@
+//RESET DRIVER
+class msrv32_rst_driver extends uvm_driver #(msrv32_rst_trans);
+
+	//Factory Registration
+	`uvm_component_utils(msrv32_rst_driver)
+
+	//RST CONFIG HANDLE
+	msrv32_rst_agent_config		r_cfg;
+
+	//RST TRANSACTION HANDLE
+	msrv32_rst_trans		rst_xtn;
+
+	//VIRTUAL RST INTERFACE FOR DRIVER
+	virtual msrv32_rst_if.DRV_MP	vif;
+
+	//METHODS
+	extern function new(string name = "msrv32_rst_driver", uvm_component parent);
+	extern function void build_phase(uvm_phase phase);
+	extern function void connect_phase(uvm_phase phase);
+	extern task run_phase(uvm_phase phase);
+	extern task send_to_dut(msrv32_rst_trans rst_xtn);
+endclass

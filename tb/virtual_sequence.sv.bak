@@ -1,0 +1,109 @@
+//VIRTUAL SEQUENCE
+class msrv32_vseq_base extends uvm_sequence #(uvm_sequence_item);
+
+	//FACTORY REGISTRATION
+	`uvm_object_utils(msrv32_vseq_base)
+
+	//ACTUAL SEQUENCER HANDLES
+	msrv32_instr_sequencer		in_seqrh[];
+	msrv32_data_sequencer		d_seqrh[];
+	msrv32_irq_sequencer		ir_seqrh[];
+	msrv32_rst_sequencer		r_seqrh[];
+
+	//VIRTUAL SEQUENCER HANDLE
+	msrv32_virtual_sequencer	vseqrh;
+
+	//ENV CONFIG HANDLE
+	msrv32_env_config		m_cfg;
+
+	rand uvm_reg_data_t 		data1,data2;
+	randc bit [4:0] addr_rs_1,addr_rs_2,addr_rd;
+	rand bit [31:0] imm_temp_value;
+	int instr_addr_temp = 0;
+
+	constraint addr_c{addr_rs_1 inside {[1:31]};
+				addr_rs_2 inside {[1:31]};
+				addr_rd inside {[1:31]};
+				addr_rs_1 != addr_rs_2;
+				addr_rs_1 != addr_rd;
+				addr_rs_2 != addr_rd;
+			}
+
+	//METHODS
+	extern function new(string name = "msrv32_vseq_base");
+	extern task body();
+endclass
+
+//==========================New Constructor===================================
+function msrv32_vseq_base::new(string name = "msrv32_vseq_base");
+	super.new(name);
+endfunction
+
+//===========================BODY================================================
+task msrv32_vseq_base::body();
+	
+	//GET VALUES FROM ENV CONFIG
+	if(!uvm_config_db #(msrv32_env_config)::get(null,get_full_name(),"msrv32_env_config",m_cfg))
+		`uvm_fatal(get_full_name(),"Cannot get m_cfg from uvm_config_db. Have you set it?")
+
+	d_seqrh 	= new[m_cfg.no_of_data_agent];
+	in_seqrh 	= new[m_cfg.no_of_instr_agent];
+	ir_seqrh	= new[m_cfg.no_of_irq_agent];
+	r_seqrh		= new[m_cfg.no_of_rst_agent];
+
+	assert($cast(vseqrh,m_sequencer))
+		else
+			begin	
+			`uvm_fatal("V_SEQ BODY","ERROR in $cast of virtual sequencer")
+			end
+
+	foreach(in_seqrh[i])
+		in_seqrh[i] = vseqrh.in_seqrh[i];
+
+	foreach(d_seqrh[i])
+		d_seqrh[i] = vseqrh.d_seqrh[i];
+
+	foreach(ir_seqrh[i])
+		ir_seqrh[i] = vseqrh.ir_seqrh[i];
+
+	foreach(r_seqrh[i])
+		r_seqrh[i] = vseqrh.r_seqrh[i];
+endtask
+
+
+//=======================================================================================
+
+//==============================RESET SEQUENCE=============================================
+class reset_vseq extends msrv32_vseq_base;
+
+	//Factory registeration
+	`uvm_object_utils(reset_vseq)
+
+	//HANDLE FOR ACTUAL RESET SEQ
+	msrv32_rst_seq		rst_seq1, rst_seq2; 	//Two handle because we have two reset driver, one for each
+
+	extern function new(string name = "reset_vseq");
+	extern task body();
+endclass
+
+//=======================New Constructor==============================================
+function reset_vseq::new(string name = "reset_vseq");
+	super.new(name);
+endfunction
+
+//=======================RESET BODY=============================================
+task reset_vseq::body();
+	super.body();
+
+	if(m_cfg.has_rst_agent)
+	begin
+		`uvm_info(get_full_name(),$sformatf("has_rst_agent = %0d",m_cfg.has_rst_agent),UVM_LOW)
+		rst_seq1 = msrv32_rst_seq::type_id::create("rst_seq1");
+		rst_seq2 = msrv32_rst_seq::type_id::create("rst_seq2");
+	end
+	//STARTING THE SEQ ON RESPECTIVE SEQUENCER (one is for design and one for reference model)
+	fork
+	rst_seq1.start(r_seqrh[0]);
+	rst_seq2.start(r_seqrh[1]);
+	join
+endtask

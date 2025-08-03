@@ -1,0 +1,57 @@
+
+interface msrv32_ahb_data_if (input logic ms_riscv32_mp_clk_in);
+
+	wire [31:0] ms_riscv32_mp_data_in;
+	wire ms_riscv32_mp_data_hready_in;
+	wire ms_riscv32_mp_hresp_in;
+
+	wire [31:0] ms_riscv32_mp_dmaddr_out;
+	wire [31:0] ms_riscv32_mp_dmdata_out;
+	wire [3:0]  ms_riscv32_mp_dmwr_mask_out;
+	wire 	    ms_riscv32_mp_dmwr_req_out;
+	wire [1:0]  ms_riscv32_mp_data_htrans_out;
+
+	//Driver clocking block
+	clocking drv_cb @(posedge ms_riscv32_mp_clk_in);
+	default input #1 output #1;
+	output ms_riscv32_mp_data_in;
+	output ms_riscv32_mp_data_hready_in;
+	output ms_riscv32_mp_hresp_in;
+	
+	input ms_riscv32_mp_dmaddr_out;
+	input ms_riscv32_mp_dmdata_out;
+	input ms_riscv32_mp_dmwr_mask_out;
+	input ms_riscv32_mp_dmwr_req_out;
+	input ms_riscv32_mp_data_htrans_out;
+	endclocking
+
+	//REFERNCE MODEL Clocking block
+	clocking rm_cb @(posedge ms_riscv32_mp_clk_in);
+	default input #1 output #1;
+	input ms_riscv32_mp_data_in;
+	input ms_riscv32_mp_data_hready_in;
+	input ms_riscv32_mp_hresp_in;
+	
+	output ms_riscv32_mp_dmaddr_out;
+	output ms_riscv32_mp_dmdata_out;
+	output ms_riscv32_mp_dmwr_mask_out;
+	output ms_riscv32_mp_dmwr_req_out;
+	output ms_riscv32_mp_data_htrans_out;
+	endclocking
+
+	//Monitor clocking block
+	clocking mon_cb @(posedge ms_riscv32_mp_clk_in);
+	default input #1 output #1;
+	input ms_riscv32_mp_dmaddr_out;
+	input ms_riscv32_mp_dmdata_out;
+	input ms_riscv32_mp_dmwr_mask_out;
+	input ms_riscv32_mp_dmwr_req_out;
+	input ms_riscv32_mp_data_htrans_out;
+	endclocking
+
+
+	//MODPORTS
+	modport DRV_MP(clocking drv_cb);
+	modport MON_MP(clocking mon_cb);
+	modport RM_MP(clocking rm_cb);
+endinterface
